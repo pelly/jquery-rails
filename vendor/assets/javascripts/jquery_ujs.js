@@ -80,10 +80,12 @@
     },
 
     // Submits "remote" forms and links with ajax
-    handleRemote: function(element) {
+    handleRemote: function(element, opts) {
       var method, url, data, elCrossDomain, crossDomain, withCredentials, dataType, options;
 
-      if (rails.fire(element, 'ajax:before')) {
+      opts = $.extend({ notify: element }, opts)
+
+      if (rails.fire(opts.notify, 'ajax:before')) {
         elCrossDomain = element.data('cross-domain');
         crossDomain = elCrossDomain === undefined ? null : elCrossDomain;
         withCredentials = element.data('with-credentials') || null;
@@ -116,22 +118,22 @@
         }
 
         options = {
-          type: method || 'GET', data: data, dataType: dataType,
+          type: method || 'GET', data: data, dataType: dataType, crossDomain: crossDomain,
           // stopping the "ajax:beforeSend" event will cancel the ajax request
           beforeSend: function(xhr, settings) {
             if (settings.dataType === undefined) {
               xhr.setRequestHeader('accept', '*/*;q=0.5, ' + settings.accepts.script);
             }
-            return rails.fire(element, 'ajax:beforeSend', [xhr, settings]);
+            return rails.fire(opts.notify, 'ajax:beforeSend', [xhr, settings]);
           },
           success: function(data, status, xhr) {
-            element.trigger('ajax:success', [data, status, xhr]);
+            opts.notify.trigger('ajax:success', [data, status, xhr]);
           },
           complete: function(xhr, status) {
-            element.trigger('ajax:complete', [xhr, status]);
+            opts.notify.trigger('ajax:complete', [xhr, status]);
           },
           error: function(xhr, status, error) {
-            element.trigger('ajax:error', [xhr, status, error]);
+            opts.notify.trigger('ajax:error', [xhr, status, error]);
           },
           crossDomain: crossDomain
         };
@@ -142,7 +144,7 @@
           options.xhrFields = {
             withCredentials: withCredentials
           };
-        }
+          }
 
         // Only pass url to `ajax` options if not blank
         if (url) { options.url = url; }
