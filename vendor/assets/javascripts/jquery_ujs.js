@@ -105,10 +105,12 @@
     },
 
     // Submits "remote" forms and links with ajax
-    handleRemote: function(element) {
+    handleRemote: function(element, opts) {
       var method, url, data, crossDomain, dataType, options;
 
-      if (rails.fire(element, 'ajax:before')) {
+      opts = $.extend({ notify: element }, opts)
+
+      if (rails.fire(opts.notify, 'ajax:before')) {
         crossDomain = element.data('cross-domain') || null;
         dataType = element.data('type') || ($.ajaxSettings && $.ajaxSettings.dataType);
 
@@ -140,16 +142,16 @@
             if (settings.dataType === undefined) {
               xhr.setRequestHeader('accept', '*/*;q=0.5, ' + settings.accepts.script);
             }
-            return rails.fire(element, 'ajax:beforeSend', [xhr, settings]);
+            return rails.fire(opts.notify, 'ajax:beforeSend', [xhr, settings]);
           },
           success: function(data, status, xhr) {
-            element.trigger('ajax:success', [data, status, xhr]);
+            opts.notify.trigger('ajax:success', [data, status, xhr]);
           },
           complete: function(xhr, status) {
-            element.trigger('ajax:complete', [xhr, status]);
+            opts.notify.trigger('ajax:complete', [xhr, status]);
           },
           error: function(xhr, status, error) {
-            element.trigger('ajax:error', [xhr, status, error]);
+            opts.notify.trigger('ajax:error', [xhr, status, error]);
           }
         };
         // Only pass url to `ajax` options if not blank
